@@ -1,0 +1,8 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/sample-app:latest', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/sample-app:latest']
+
+images:
+- 'europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/sample-app:latest'
