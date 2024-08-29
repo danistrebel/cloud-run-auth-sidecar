@@ -34,30 +34,30 @@ func main() {
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 	// Check if the request is for the target domain
-	if !isTargetDomain(r.Host) {
+	if strings.HasSuffix(r.Host, targetDomain) {
+		log.Println("Performing auth injection for calling Cloud Run Service:", r.Host)
+		r.URL.Scheme = "https"
+		// Get the GCP identity token
+		token, err := getIdentityToken("https://" + r.Host)
+		if err != nil {
+			log.Printf("Error getting identity token: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+
+		if r.Header.Get("Authorization") == "" {
+			r.Header.Set("Authorization", "Bearer "+token)
+		}
+
+		// Proxy the modified request
+		proxyRequest(w, r)
+		return
+	} else {
 		log.Println("no auth injection for host:", r.Host)
 		proxyRequest(w, r)
 		return
 	}
-	log.Println("performing auth injection for host:", r.Host)
 
-	// Get the GCP identity token
-	token, err := getIdentityToken("https://" + r.Host)
-	if err != nil {
-		log.Printf("Error getting identity token: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	// Add the token to the request headers
-	r.Header.Set("Authorization", "Bearer "+token)
-
-	// Proxy the modified request
-	proxyRequest(w, r)
-}
-
-func isTargetDomain(host string) bool {
-	return strings.HasSuffix(host, targetDomain)
 }
 
 func getIdentityToken(aud string) (string, error) {
@@ -89,8 +89,6 @@ func getIdentityToken(aud string) (string, error) {
 
 func proxyRequest(w http.ResponseWriter, r *http.Request) {
 	// Create a reverse proxy to forward the request
-	r.URL.Scheme = "https"
-
 	proxy := httputil.NewSingleHostReverseProxy(&url.URL{
 		Scheme: r.URL.Scheme,
 		Host:   r.Host,

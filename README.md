@@ -1,5 +1,30 @@
 # POC Inject Service Account ID Token for Cloud Run to Cloud Run Calls
 
+## Problem Statement
+
+Trying to perform a lift and shift migration of an existing microservices architecture to Cloud Run by only chainging the 
+target endpoints of the services without changing the code or adding Cloud Run specific authentication patterns.
+
+We want avoid giving `allUsers` the role `roles/run.invoker` and require authentiction on all Cloud Run services.
+
+## Proposed Solution
+
+Create a authenticating sidecar (see(auth-sidecar)[./auth-sidecar]) that adds the Cloud Run Service's ID token as an Authorization Header on any outgoing requests to other Cloud Run services.
+
+The approach in this repo uses an HTTP_PROXY that points to the `auth-sidecar` and requires the client service to use the target URL with an `http` scheme (yes, plain HTTP internally for now, see below for more details).
+
+![Archtecture Sketch](./img/sketch.png)
+
+### FAQ
+
+*Why do I have to use http in my client serivce?*
+
+Because it's a prototype and I don't have a valid TLS certificate.
+
+*Why do we use `HTTP_PROXY` and not `iptables`*
+Cloud Run uses a sandboxed gVisor environment and gVisor doesn't allow iptables.
+
+
 ```sh
 export PROJECT_ID=<>
 export REPO_ROOT="$(pwd)"
