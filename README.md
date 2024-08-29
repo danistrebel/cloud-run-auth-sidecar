@@ -22,15 +22,19 @@ The approach in this repo uses an HTTP_PROXY that points to the `auth-sidecar` a
 Because it's a prototype and I don't have a valid TLS certificate.
 
 *Why do we use `HTTP_PROXY` and not `iptables`*
+
 Cloud Run uses a sandboxed gVisor environment and gVisor doesn't allow iptables.
 
+## Demo
+
+Clone this repo and from within its folder run:
 
 ```sh
-export PROJECT_ID=<>
+export PROJECT_ID=<your GCP Project ID>
 export REPO_ROOT="$(pwd)"
 ```
 
-## Build the Sample App and Auth Sidecar
+### Build the Sample App and Auth Sidecar in Cloud Build
 
 ```sh
 cd "$REPO_ROOT"/sample-app
@@ -42,7 +46,7 @@ cd "$REPO_ROOT"/auth-sidecar
 gcloud builds submit . --project $PROJECT_ID
 ```
 
-## Deploy a Backend Service
+### Deploy a Backend Service
 
 ```sh
 gcloud run deploy backend-service --image europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/sample-app --region europe-west1 --no-allow-unauthenticated --project $PROJECT_ID
@@ -60,7 +64,7 @@ This should return
 hello from the downstream app
 ```
 
-## Magic Moment: Deploy the Orchestrator Service with Sidecar Proxy
+### Magic Moment: Deploy the Orchestrator Service with Sidecar Proxy
 
 ```sh
 
@@ -82,7 +86,7 @@ spec:
             - name: HTTP_PROXY
               value: "http://127.0.0.1:8000"
             - name: TARGET_URL
-              value: "$(gcloud run services describe backend-service --region=europe-west1 --project=$PROJECT_ID --format="value(status.url)")/test"
+              value: "$(gcloud run services describe backend-service --region=europe-west1 --project=$PROJECT_ID --format="value(status.url)" | awk '{gsub("https", "http"); print}')/test"
         - image: "europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/auth-sidecar:latest"
 EOF
 
