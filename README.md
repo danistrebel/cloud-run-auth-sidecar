@@ -77,9 +77,13 @@ metadata:
     cloud.googleapis.com/location: "europe-west1"
 spec:
   template:
+    metadata:
+      annotations:
+        run.googleapis.com/container-dependencies: '{"sample-app":["auth-sidecar"]}'
     spec:
       containers:
-        - image: "europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/sample-app:latest"
+        - name: sample-app
+          image: "europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/sample-app:latest"
           ports:
             - containerPort: 8080
           env:
@@ -87,7 +91,8 @@ spec:
               value: "http://127.0.0.1:8000"
             - name: TARGET_URL
               value: "$(gcloud run services describe backend-service --region=europe-west1 --project=$PROJECT_ID --format="value(status.url)" | awk '{gsub("https", "http"); print}')/test"
-        - image: "europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/auth-sidecar:latest"
+        - name: auth-sidecar
+          image: "europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/auth-sidecar:latest"
 EOF
 
 gcloud run services replace orchestrator-service.yaml --project $PROJECT_ID
