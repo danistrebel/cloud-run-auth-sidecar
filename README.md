@@ -19,7 +19,7 @@ The approach in this repo uses an HTTP_PROXY that points to the `auth-sidecar` a
 
 *Why do I have to use http in my client serivce?*
 
-Because it's a prototype and I don't have a valid TLS certificate.
+Because because an HTTPS proxy can't rewrite the headers.
 
 *Why do we use `HTTP_PROXY` and not `iptables`*
 
