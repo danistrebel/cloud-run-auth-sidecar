@@ -98,7 +98,7 @@ spec:
             periodSeconds: 240
             failureThreshold: 1
             tcpSocket:
-              port: 8080
+              port: 8000
 
 EOF
 
