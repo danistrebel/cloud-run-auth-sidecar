@@ -93,6 +93,13 @@ spec:
               value: "$(gcloud run services describe backend-service --region=europe-west1 --project=$PROJECT_ID --format="value(status.url)" | awk '{gsub("https", "http"); print}')/test"
         - name: auth-sidecar
           image: "europe-west1-docker.pkg.dev/$PROJECT_ID/demo-repo/auth-sidecar:latest"
+          startupProbe:
+            timeoutSeconds: 240
+            periodSeconds: 240
+            failureThreshold: 1
+            tcpSocket:
+              port: 8080
+
 EOF
 
 gcloud run services replace orchestrator-service.yaml --project $PROJECT_ID
